@@ -1,0 +1,14 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>net8.0</TargetFramework>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+    </PropertyGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\MIOTO.APPLICATION\MIOTO.APPLICATION.csproj" />
+      <ProjectReference Include="..\MIOTO.PERSISTENCE\MIOTO.PERSISTENCE.csproj" />
+    </ItemGroup>
+
+</Project>

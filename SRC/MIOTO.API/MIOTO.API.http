@@ -1,0 +1,6 @@
+@MIOTO.API_HostAddress = http://localhost:5009
+
+GET {{MIOTO.API_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
