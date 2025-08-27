@@ -4,9 +4,8 @@ using MIOTO.DOMAIN.Abstractions.Entities;
 using MIOTO.DOMAIN.Abstractions.Repositories;
 
 namespace MIOTO.PERSISTENCE.Repositories;
-
 public class RepositoryBase<TEntity, TKey> : IRepositoryBase<TEntity, TKey>, IDisposable
-    where TEntity : DomainEntity<TKey>
+    where TEntity : class
 {
     private readonly ApplicationDbContext _context;
 
@@ -15,39 +14,60 @@ public class RepositoryBase<TEntity, TKey> : IRepositoryBase<TEntity, TKey>, IDi
 
     public void Dispose() => _context?.Dispose();
 
-    public TEntity FindById(TKey id, params Expression<Func<TEntity, object>>[] includeProperties)
-        => FindAll(null, includeProperties).SingleOrDefault(x => x.Equals(id));
-
-
-    public TEntity FindSingle(Expression<Func<TEntity, bool>> predicate, params Expression<Func<TEntity, object>>[] includeProperties)
-        => FindAll(null, includeProperties).SingleOrDefault(predicate);
-
-    public IQueryable<TEntity> FindAll(Expression<Func<TEntity, bool>>? predicate = null, params Expression<Func<TEntity, object>>[] includeProperties)
+    public async Task<TEntity?> FindByIdAsync(TKey id, params Expression<Func<TEntity, object>>[] includeProperties)
     {
-        IQueryable<TEntity> items = _context.Set<TEntity>();
-        if (includeProperties != null)
-            foreach (var includeProperty in includeProperties)
-                items = items.Include(includeProperty);
-
-        if (predicate is not null)
-            items.Where(predicate);
-
-        return items;
+        var query = ApplyIncludes(_context.Set<TEntity>(), includeProperties);
+        return await query.FirstOrDefaultAsync(e => EF.Property<TKey>(e, "Id")!.Equals(id));
     }
 
-    public void Add(TEntity entity)
-        => _context.Add(entity);
+    public async Task<TEntity?> FindSingleAsync(Expression<Func<TEntity, bool>> predicate, params Expression<Func<TEntity, object>>[] includeProperties)
+    {
+        var query = ApplyIncludes(_context.Set<TEntity>(), includeProperties);
+        return await query.FirstOrDefaultAsync(predicate);
+    }
 
+    public async Task<List<TEntity>> FindAllAsync(Expression<Func<TEntity, bool>>? predicate = null, params Expression<Func<TEntity, object>>[] includeProperties)
+    {
+        var query = ApplyIncludes(_context.Set<TEntity>(), includeProperties);
 
-    public void Update(TEntity entity)
-        => _context.Set<TEntity>().Update(entity);
+        if (predicate is not null)
+            query = query.Where(predicate);
 
-    public void Remove(TEntity entity)
-        => _context.Set<TEntity>().Remove(entity);
+        return await query.ToListAsync();
+    }
 
+    public async Task<TEntity> AddAsync(TEntity entity)
+    {
+        var entry = await _context.Set<TEntity>().AddAsync(entity);
+        return entry.Entity;
+    }
 
-    public void RemoveMultiple(List<TEntity> entities)
-        => _context.Set<TEntity>().RemoveRange(entities);
+    public Task<TEntity> UpdateAsync(TEntity entity)
+    {
+        var entry = _context.Set<TEntity>().Update(entity);
+        return Task.FromResult(entry.Entity);
+    }
 
+    public Task RemoveAsync(TEntity entity)
+    {
+        _context.Set<TEntity>().Remove(entity);
+        return Task.CompletedTask;
+    }
 
+    public Task RemoveMultipleAsync(List<TEntity> entities)
+    {
+        _context.Set<TEntity>().RemoveRange(entities);
+        return Task.CompletedTask;
+    }
+
+    private IQueryable<TEntity> ApplyIncludes(IQueryable<TEntity> query, params Expression<Func<TEntity, object>>[] includeProperties)
+    {
+        if (includeProperties != null)
+        {
+            foreach (var include in includeProperties)
+                query = query.Include(include);
+        }
+
+        return query;
+    }
 }

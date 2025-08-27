@@ -3,14 +3,14 @@ using System.Linq.Expressions;
 using MIOTO.DOMAIN.Abstractions.Entities;
 
 namespace MIOTO.DOMAIN.Abstractions.Repositories;
-
-public interface IRepositoryBase<TEntity, in Tkey> where TEntity : class // => in implementation should be Entity<Tkey>
+public interface IRepositoryBase<TEntity, in TKey> where TEntity : class
 {
-    TEntity FindById(Tkey id, params Expression<Func<TEntity, object>>[] includeProperties);
-    TEntity FindSingle(Expression<Func<TEntity, bool>> predicate, params Expression<Func<TEntity, object>>[] includeProperties);
-    IQueryable<TEntity> FindAll(Expression<Func<TEntity, bool>>? predicate = null, params Expression<Func<TEntity, object>>[] includeProperties);
-    void Add(TEntity entity);
-    void Update(TEntity entity);
-    void Remove(TEntity entity);
-    void RemoveMultiple(List<TEntity> entities);
+    Task<TEntity?> FindByIdAsync(TKey id, params Expression<Func<TEntity, object>>[] includeProperties);
+    Task<TEntity?> FindSingleAsync(Expression<Func<TEntity, bool>> predicate, params Expression<Func<TEntity, object>>[] includeProperties);
+    Task<List<TEntity>> FindAllAsync(Expression<Func<TEntity, bool>>? predicate = null, params Expression<Func<TEntity, object>>[] includeProperties);
+
+    Task<TEntity> AddAsync(TEntity entity);
+    Task<TEntity> UpdateAsync(TEntity entity);
+    Task RemoveAsync(TEntity entity);
+    Task RemoveMultipleAsync(List<TEntity> entities);
 }

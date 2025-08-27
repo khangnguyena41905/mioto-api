@@ -5,9 +5,11 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using MIOTO.DOMAIN;
 using MIOTO.DOMAIN.Abstractions.Repositories;
+using MIOTO.DOMAIN.Abstractions.Repositories.Identity;
 using MIOTO.DOMAIN.Entities.Identity;
 using MIOTO.PERSISTENCE.DependencyInjection.Options;
 using MIOTO.PERSISTENCE.Repositories;
+using MIOTO.PERSISTENCE.Repositories.Identity;
 
 namespace MIOTO.PERSISTENCE.DependencyInjection.Extensions;
 
@@ -60,7 +62,8 @@ public static class ServiceCollectionExtensions
 
     public static void AddRepositoryBaseConfiguration(this IServiceCollection services)
         => services.AddTransient(typeof(IUnitOfWork), typeof(EFUnitOfWork))
-        .AddTransient(typeof(IRepositoryBase<,>), typeof(RepositoryBase<,>));
+        .AddTransient(typeof(IRepositoryBase<,>), typeof(RepositoryBase<,>))
+        .AddTransient<IAppRoleRepository, AppRoleRepository>();
 
     public static OptionsBuilder<SqlServerRetryOptions> ConfigureSqlServerRetryOptions(this IServiceCollection services, IConfigurationSection section)
         => services

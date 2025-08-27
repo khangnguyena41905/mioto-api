@@ -9,7 +9,6 @@
     <ItemGroup>
       <ProjectReference Include="..\MIOTO.CONTRACT\MIOTO.CONTRACT.csproj" />
       <ProjectReference Include="..\MIOTO.DOMAIN\MIOTO.DOMAIN.csproj" />
-      <ProjectReference Include="..\MIOTO.PERSISTENCE\MIOTO.PERSISTENCE.csproj" />
     </ItemGroup>
 
     <ItemGroup>
