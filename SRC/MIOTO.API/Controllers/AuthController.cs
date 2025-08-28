@@ -28,4 +28,6 @@ public class AuthController : ApiController
 
         return BadRequest(new { errors = result.Error });
     }
+    
+    
 }

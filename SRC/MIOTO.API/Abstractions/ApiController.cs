@@ -16,6 +16,5 @@ public abstract class ApiController : ControllerBase
 
     protected ApiController()
     {
-        throw new NotImplementedException();
     }
 }

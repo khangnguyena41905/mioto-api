@@ -26,7 +26,7 @@ public class RepositoryBase<TEntity, TKey> : IRepositoryBase<TEntity, TKey>, IDi
         return await query.FirstOrDefaultAsync(predicate);
     }
 
-    public async Task<List<TEntity>> FindAllAsync(Expression<Func<TEntity, bool>>? predicate = null, params Expression<Func<TEntity, object>>[] includeProperties)
+    public async Task<IEnumerable<TEntity>> FindAllAsync(Expression<Func<TEntity, bool>>? predicate = null, params Expression<Func<TEntity, object>>[] includeProperties)
     {
         var query = ApplyIncludes(_context.Set<TEntity>(), includeProperties);
 
