@@ -14,51 +14,77 @@ public record UpdateFunctionCommand(
     string? ParrentId,
     int? SortOrder,
     string? CssClass,
-    bool? IsActive
+    bool? IsActive,
+    ICollection<ActionInFunction>? ActionInFunctions
 ) : ICommand<Function>;
 
-internal class UpdateFunctionCommandValidator : AbstractValidator<UpdateFunctionCommand>
+public class UpdateFunctionCommandValidator : AbstractValidator<UpdateFunctionCommand>
 {
     public UpdateFunctionCommandValidator()
     {
-        RuleFor(x => x.Id).NotEmpty();
-        RuleFor(x => x.Name).NotEmpty().MaximumLength(256);
-        RuleFor(x => x.Url).NotEmpty().MaximumLength(500);
-        RuleFor(x => x.CssClass).MaximumLength(100);
+        RuleFor(x => x.Id)
+            .NotEmpty().WithMessage("Id không được để trống");
+        RuleFor(x => x.Name)
+            .NotEmpty().WithMessage("Name không được để trống");
+        RuleFor(x => x.Url)
+            .NotEmpty().WithMessage("Url không được để trống");
     }
 }
 
 internal class UpdateFunctionCommandHandler : ICommandHandler<UpdateFunctionCommand, Function>
 {
     private readonly IFunctionRepository _functionRepository;
+    private readonly IActionInFunctionRepository _actionInFunctionRepository;
     private readonly IUnitOfWork _unitOfWork;
 
-    public UpdateFunctionCommandHandler(IFunctionRepository functionRepository, IUnitOfWork unitOfWork)
+    public UpdateFunctionCommandHandler(
+        IFunctionRepository functionRepository,
+        IActionInFunctionRepository actionInFunctionRepository,
+        IUnitOfWork unitOfWork)
     {
         _functionRepository = functionRepository;
+        _actionInFunctionRepository = actionInFunctionRepository;
         _unitOfWork = unitOfWork;
     }
 
     public async Task<Result<Function>> Handle(UpdateFunctionCommand request, CancellationToken cancellationToken)
     {
-        var func = await _functionRepository.FindByIdAsync(request.Id);
-        if (func is null)
-            return Result.Failure<Function>(new Error("404", "Function not found"));
+        // 1. Lấy Function hiện tại
+        var function = await _functionRepository.FindByIdAsync(request.Id, f => f.ActionInFunctions);
+        if (function is null)
+            return Result.Failure<Function>(Error.None);
 
-        var existing = await _functionRepository.FindSingleAsync(x => x.Name == request.Name && x.Id != request.Id);
-        if (existing is not null)
-            return Result.Failure<Function>(new Error("400", "Another function with same name already exists"));
+        // 2. Cập nhật thông tin cơ bản
+        function.Name = request.Name;
+        function.Url = request.Url;
+        function.ParrentId = request.ParrentId;
+        function.SortOrder = request.SortOrder;
+        function.CssClass = request.CssClass;
+        function.IsActive = request.IsActive;
 
-        func.Name = request.Name;
-        func.Url = request.Url;
-        func.ParrentId = request.ParrentId;
-        func.SortOrder = request.SortOrder;
-        func.CssClass = request.CssClass;
-        func.IsActive = request.IsActive;
+        // 3. Xóa toàn bộ ActionInFunctions cũ
+        if (function.ActionInFunctions?.Any() == true)
+        {
+            await _actionInFunctionRepository.RemoveListAsync(function.ActionInFunctions.ToList());
+        }
 
-        await _functionRepository.UpdateAsync(func);
-        await _unitOfWork.CommitAsync();
+        // 4. Thêm ActionInFunctions mới (nếu có)
+        if (request.ActionInFunctions?.Any() == true)
+        {
+            foreach (var aif in request.ActionInFunctions)
+            {
+                aif.FunctionId = function.Id; // gán FK nếu cần
+            }
 
-        return Result.Success(func);
+            await _actionInFunctionRepository.AddRangeAsync(request.ActionInFunctions.ToList());
+        }
+
+        // 5. Cập nhật Function
+        await _functionRepository.UpdateAsync(function);
+
+        // 6. Commit transaction
+        await _unitOfWork.CommitAsync(cancellationToken);
+
+        return Result.Success(function);
     }
 }

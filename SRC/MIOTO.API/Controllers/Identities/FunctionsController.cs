@@ -54,7 +54,8 @@ public class FunctionsController : ApiController
             request.ParrentId,
             request.SortOrder,
             request.CssClass,
-            request.IsActive
+            request.IsActive,
+            request.ActionInFunctions
         );
 
         var result = await _sender.Send(command, cancellationToken);

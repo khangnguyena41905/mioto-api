@@ -1,5 +1,6 @@
 using System.Linq.Expressions;
 using Microsoft.EntityFrameworkCore;
+using MIOTO.CONTRACT.Abstractions.Shared;
 using MIOTO.DOMAIN.Abstractions.Entities;
 using MIOTO.DOMAIN.Abstractions.Repositories;
 
@@ -36,6 +37,27 @@ public class RepositoryBase<TEntity, TKey> : IRepositoryBase<TEntity, TKey>, IDi
         return await query.ToListAsync();
     }
 
+    public async Task<PagedResult<TEntity>> FindAllPagedAsync(
+        int pageIndex,
+        int pageSize,
+        Expression<Func<TEntity, bool>>? predicate = null,
+        params Expression<Func<TEntity, object>>[] includeProperties)
+    {
+        var query = ApplyIncludes(_context.Set<TEntity>(), includeProperties);
+
+        if (predicate is not null)
+            query = query.Where(predicate);
+
+        var totalCount = await query.CountAsync();
+
+        var items = await query
+            .Skip((pageIndex - 1) * pageSize)
+            .Take(pageSize)
+            .ToListAsync();
+
+        return PagedResult<TEntity>.Create(items, totalCount, pageIndex, pageSize);
+    }
+    
     public async Task<TEntity> AddAsync(TEntity entity)
     {
         var entry = await _context.Set<TEntity>().AddAsync(entity);

@@ -65,7 +65,9 @@ public static class ServiceCollectionExtensions
         .AddTransient(typeof(IRepositoryBase<,>), typeof(RepositoryBase<,>))
         .AddTransient<IAppRoleRepository, AppRoleRepository>()
         .AddTransient<IFunctionRepository, FunctionRepository>()
-        .AddTransient<IActionRepository, ActionRepository>();
+        .AddTransient<IActionRepository, ActionRepository>()
+        .AddTransient<IActionInFunctionRepository, ActionInFunctionRepository>()
+        .AddTransient<IPermissionRepository, PermissionRepository>();
 
     public static OptionsBuilder<SqlServerRetryOptions> ConfigureSqlServerRetryOptions(this IServiceCollection services, IConfigurationSection section)
         => services

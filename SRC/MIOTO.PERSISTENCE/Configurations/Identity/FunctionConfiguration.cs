@@ -40,12 +40,14 @@ public class FunctionConfiguration: IEntityTypeConfiguration<Function>
         builder.HasMany(x => x.Permissions)
             .WithOne()
             .HasForeignKey(p => p.FunctionId)
-            .IsRequired();
+            .IsRequired()
+            .OnDelete(DeleteBehavior.Cascade);
 
         // Mỗi Function có nhiều ActionInFunction
         builder.HasMany(x => x.ActionInFunctions)
             .WithOne()
             .HasForeignKey(a => a.FunctionId)
-            .IsRequired(false);
+            .IsRequired(false)
+            .OnDelete(DeleteBehavior.Cascade);
     }
 }
